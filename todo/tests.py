@@ -192,3 +192,59 @@ class TodoUpdateTestCase(TestCase):
         self.assertEqual(task.title, 'new title')
         expected_due = timezone.make_aware(datetime(2024, 8, 1, 12, 0, 0))
         self.assertEqual(task.due_at, expected_due)
+class TodoCompleteTestCase(TestCase):
+    def test_complete_task(self):
+        task = Task(title='task1', completed=False)
+        task.save()
+        task_id = task.pk
+
+        client = Client()
+        data = {'title': 'new title', 'due_at': '2024-08-01 12:00:00'}
+        response = client.post(f'/{task_id}/update', data)
+        response = client.post(f'/{task_id}/complete/')
+
+        self.assertEqual(response.status_code, 302)
+        task.refresh_from_db()
+        self.assertTrue(task.completed)
+
+    def test_uncomplete_task(self):
+        task = Task(title='task1', completed=True)
+        task.save()
+        task_id = task.pk
+
+        client = Client()
+        response = client.post(f'/{task_id}/complete/')
+
+        self.assertEqual(response.status_code, 302)
+        task.refresh_from_db()
+        self.assertFalse(task.completed)
+
+    def test_complete_nonexistent_task(self):
+        client = Client()
+        response = client.post('/999/complete/')
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_complete_task_verify_redirect(self):
+        task = Task(title='task1')
+        task.save()
+        task_id = task.pk
+
+        client = Client()
+        response = client.post(f'/{task_id}/complete/')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f'/{task_id}/')
+    def test_complete_task_does_not_affect_others(self):
+        task1 = Task(title='task1', completed=False)
+        task1.save()
+        task2 = Task(title='task2', completed=False)
+        task2.save()
+
+        client = Client()
+        client.post(f'/{task1.pk}/complete/')
+
+        task1.refresh_from_db()
+        task2.refresh_from_db()
+        self.assertTrue(task1.completed)
+        self.assertFalse(task2.completed)
