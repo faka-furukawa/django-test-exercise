@@ -28,7 +28,15 @@
         {% csrf_token %}
         <button type="submit">Delete</button>
       </form>
-        <a href="{%url 'update' task.id %}">Edit</a>"
+      <form action="{% url 'complete' task.id %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        {% if task.completed %}
+        <button type="submit">Uncomplete</button>
+        {% else %}
+        <button type="submit">Complete</button>
+        {% endif %}
+      </form>
+      <a href="{% url 'update' task.id %}">Edit</a>
     </div>
   </body>
 
