@@ -214,3 +214,60 @@ class TodoCompleteTestCase(TestCase):
         task2.refresh_from_db()
         self.assertTrue(task1.completed)
         self.assertFalse(task2.completed)
+
+
+class TodoOverdueWarningTestCase(TestCase):
+    def test_index_overdue_task_has_overdue_class(self):
+        due = timezone.make_aware(datetime(2024, 6, 30, 23, 59, 59))
+        task = Task(title='overdue task', due_at=due, completed=False)
+        task.save()
+        client = Client()
+        response = client.get('/')
+
+        self.assertContains(response, 'overdue', status_code=200)
+        self.assertContains(response, '⚠️ 期限切れ', status_code=200)
+
+    def test_index_completed_overdue_no_warning(self):
+        due = timezone.make_aware(datetime(2024, 6, 30, 23, 59, 59))
+        task = Task(title='done task', due_at=due, completed=True)
+        task.save()
+        client = Client()
+        response = client.get('/')
+
+        self.assertNotContains(response, '⚠️ 期限切れ', status_code=200)
+        self.assertNotContains(response, 'class=\"warning\"', status_code=200)
+
+    def test_index_future_task_no_warning(self):
+        due = timezone.make_aware(datetime(2099, 12, 31, 23, 59, 59))
+        task = Task(title='future task', due_at=due, completed=False)
+        task.save()
+        client = Client()
+        response = client.get('/')
+
+        self.assertNotContains(response, '⚠️ 期限切れ', status_code=200)
+
+    def test_index_no_due_date_no_warning(self):
+        task = Task(title='no due task', completed=False)
+        task.save()
+        client = Client()
+        response = client.get('/')
+
+        self.assertNotContains(response, '⚠️ 期限切れ', status_code=200)
+
+    def test_detail_overdue_task_has_warning(self):
+        due = timezone.make_aware(datetime(2024, 6, 30, 23, 59, 59))
+        task = Task(title='overdue task', due_at=due, completed=False)
+        task.save()
+        client = Client()
+        response = client.get(f'/{task.pk}/')
+
+        self.assertContains(response, '⚠️ 期限切れ', status_code=200)
+
+    def test_detail_completed_overdue_no_warning(self):
+        due = timezone.make_aware(datetime(2024, 6, 30, 23, 59, 59))
+        task = Task(title='done task', due_at=due, completed=True)
+        task.save()
+        client = Client()
+        response = client.get(f'/{task.pk}/')
+
+        self.assertNotContains(response, '⚠️ 期限切れ', status_code=200)
