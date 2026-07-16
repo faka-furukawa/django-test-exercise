@@ -43,3 +43,37 @@ button:hover {
     border-radius: 6px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
+
+.filter-bar {
+    margin: 1rem 0;
+    padding: 0.8rem 1rem;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.filter-bar span {
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.filter-bar a {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    margin: 0 0.2rem;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #3498db;
+    border: 1px solid #3498db;
+    transition: all 0.2s;
+}
+
+.filter-bar a:hover {
+    background-color: #3498db;
+    color: white;
+}
+
+.filter-bar a.active {
+    background-color: #3498db;
+    color: white;
+}

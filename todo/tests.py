@@ -248,3 +248,74 @@ class TodoCompleteTestCase(TestCase):
         task2.refresh_from_db()
         self.assertTrue(task1.completed)
         self.assertFalse(task2.completed)
+
+
+class TodoFilterTestCase(TestCase):
+    def test_filter_all(self):
+        Task(title='task1', completed=False).save()
+        Task(title='task2', completed=True).save()
+        client = Client()
+        response = client.get('/?status=all')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['tasks']), 2)
+        self.assertEqual(response.context['current_status'], 'all')
+
+    def test_filter_completed(self):
+        Task(title='task1', completed=True).save()
+        Task(title='task2', completed=False).save()
+        client = Client()
+        response = client.get('/?status=completed')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['tasks']), 1)
+        self.assertEqual(response.context['tasks'][0].title, 'task1')
+        self.assertEqual(response.context['current_status'], 'completed')
+
+    def test_filter_not_completed(self):
+        Task(title='task1', completed=True).save()
+        Task(title='task2', completed=False).save()
+        client = Client()
+        response = client.get('/?status=not_completed')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['tasks']), 1)
+        self.assertEqual(response.context['tasks'][0].title, 'task2')
+        self.assertEqual(response.context['current_status'], 'not_completed')
+
+    def test_filter_overdue(self):
+        past = timezone.make_aware(datetime(2024, 6, 30, 23, 59, 59))
+        future = timezone.make_aware(datetime(2099, 12, 31, 23, 59, 59))
+        Task(title='overdue', due_at=past, completed=False).save()
+        Task(title='not overdue', due_at=future, completed=False).save()
+        Task(title='completed overdue', due_at=past, completed=True).save()
+        client = Client()
+        response = client.get('/?status=overdue')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['tasks']), 1)
+        self.assertEqual(response.context['tasks'][0].title, 'overdue')
+        self.assertEqual(response.context['current_status'], 'overdue')
+
+    def test_filter_overdue_excludes_completed(self):
+        past = timezone.make_aware(datetime(2024, 6, 30, 23, 59, 59))
+        Task(title='done', due_at=past, completed=True).save()
+        client = Client()
+        response = client.get('/?status=overdue')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['tasks']), 0)
+
+    def test_filter_overdue_excludes_no_due_date(self):
+        Task(title='no due', completed=False).save()
+        client = Client()
+        response = client.get('/?status=overdue')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['tasks']), 0)
+
+    def test_default_status_is_all(self):
+        client = Client()
+        response = client.get('/')
+
+        self.assertEqual(response.context['current_status'], 'all')

@@ -33,6 +33,14 @@
       <a href="{% url 'index' %}?order=post">Sort by Posted Date</a>
     </div>
 
+    <div class="filter-bar">
+      <span>Filter:</span>
+      <a href="{% url 'index' %}?status=all" class="{% if current_status == 'all' %}active{% endif %}">All</a>
+      <a href="{% url 'index' %}?status=completed" class="{% if current_status == 'completed' %}active{% endif %}">Completed</a>
+      <a href="{% url 'index' %}?status=not_completed" class="{% if current_status == 'not_completed' %}active{% endif %}">Not Completed</a>
+      <a href="{% url 'index' %}?status=overdue" class="{% if current_status == 'overdue' %}active{% endif %}">Overdue</a>
+    </div>
+
     {% for task in tasks %}
     <div class="text">
       <h2><a href="{% url 'detail' task.id %}">{{ task.title }}</a></h2>
