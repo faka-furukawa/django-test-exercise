@@ -4,10 +4,19 @@ from django.utils import timezone
 
 # Create your models here.
 class Task(models.Model):
+    PRIORITY_CHOICES = [
+        (1, '1'),
+        (2, '2'),
+        (3, '3'),
+        (4, '4'),
+        (5, '5'),
+    ]
+
     title = models.CharField(max_length=100)
     completed = models.BooleanField(default=False)
     posted_at = models.DateTimeField(default=timezone.now)
     due_at = models.DateTimeField(null=True, blank=True)
+    priority = models.PositiveSmallIntegerField(default=3, choices=PRIORITY_CHOICES)
 
     def is_overdue(self, dt):
         if self.due_at is None:
