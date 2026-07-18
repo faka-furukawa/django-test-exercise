@@ -13,13 +13,25 @@ def index(request):
                     due_at=make_aware(parse_datetime(request.POST['due_at'])))
         task.save()
 
+    # 並べ替え
     if request.GET.get('order') == 'due':
         tasks = Task.objects.order_by('due_at')
     else:
         tasks = Task.objects.order_by('-posted_at')
 
+    # フィルタリング
+    status = request.GET.get('status')
+    if status == 'completed':
+        tasks = tasks.filter(completed=True)
+    elif status == 'not_completed':
+        tasks = tasks.filter(completed=False)
+    elif status == 'overdue':
+        now = timezone.now()
+        tasks = tasks.filter(due_at__isnull=False, due_at__lt=now, completed=False)
+
     context = {
-        'tasks': tasks
+        'tasks': tasks,
+        'current_status': status or 'all'
     }
     return render(request, 'todo/index.html', context)
 
