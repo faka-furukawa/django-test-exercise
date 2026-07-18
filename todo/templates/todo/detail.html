@@ -18,6 +18,8 @@
       {% endif %}
       {% if task.completed %}
       <li>Status: Completed</li>
+      {% elif task.is_overdue_now %}
+      <li class="warning">⚠️ 期限切れ</li>
       {% else %}
       <li>Status: Not Completed</li>
       {% endif %}
