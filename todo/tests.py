@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 from todo.models import Task
 
 
@@ -99,6 +99,49 @@ class TodoViewTestCase(TestCase):
         self.assertEqual(response.templates[0].name, 'todo/index.html')
         self.assertEqual(response.context['tasks'][0], task1)
         self.assertEqual(response.context['tasks'][1], task2)
+
+    def test_index_shows_top_task_within_three_days(self):
+        now = timezone.now()
+        task1 = Task(title='task1', due_at=now + timedelta(days=2), priority=2)
+        task1.save()
+        task2 = Task(title='task2', due_at=now + timedelta(days=1), priority=1)
+        task2.save()
+        task3 = Task(title='task3', due_at=now + timedelta(days=5), priority=5)
+        task3.save()
+
+        client = Client()
+        response = client.get('/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['top_task'], task1)
+
+    def test_index_shows_nearest_due_when_no_three_day_task(self):
+        now = timezone.now()
+        task1 = Task(title='task1', due_at=now + timedelta(days=4), priority=5)
+        task1.save()
+        task2 = Task(title='task2', due_at=now + timedelta(days=6), priority=1)
+        task2.save()
+
+        client = Client()
+        response = client.get('/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['top_task'], task1)
+
+    def test_index_excludes_overdue_from_top_task(self):
+        now = timezone.now()
+        overdue = Task(title='overdue', due_at=now - timedelta(days=1), priority=5)
+        overdue.save()
+        task1 = Task(title='task1', due_at=now + timedelta(days=2), priority=2)
+        task1.save()
+        task2 = Task(title='task2', due_at=now + timedelta(days=1), priority=1)
+        task2.save()
+
+        client = Client()
+        response = client.get('/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['top_task'], task1)
 
 
 class TodoDeleteTestCase(TestCase):
