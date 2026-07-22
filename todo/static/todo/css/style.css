@@ -76,6 +76,26 @@ button:hover {
 .filter-bar a.active {
     background-color: #3498db;
     color: white;
+}
+
+.top-task {
+    background: #fffbef;
+    padding: 1rem;
+    border: 1px solid #f1c40f;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.top-task h2 {
+    margin-top: 0;
+    color: #d35400;
+}
+
+.top-task-note {
+    margin: 0.5rem 0 0;
+    color: #7f8c8d;
+}
+
 .text.overdue {
     border-left: 4px solid #e74c3c;
     background-color: #fdf2f2;

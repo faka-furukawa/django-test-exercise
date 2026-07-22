@@ -11,6 +11,17 @@
 
   <body>
     <h1>Sample To Do Application</h1>
+    {% if top_task %}
+    <div class="top-task">
+      <h2>Now to focus</h2>
+      <h3><a href="{% url 'detail' top_task.id %}">{{ top_task.title }}</a></h3>
+      <p>
+        Priority: {{ top_task.priority }}
+        {% if top_task.due_at %}/ Due at: {{ top_task.due_at }}{% endif %}
+      </p>
+      <p class="top-task-note">This is the one task you should focus on now.</p>
+    </div>
+    {% endif %}
     <p>You can submit tasks from the following form.</p>
     <form action="{% url 'index' %}" method="post">
       {% csrf_token %}

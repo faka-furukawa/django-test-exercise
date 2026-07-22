@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.shortcuts import render, redirect
 from django.http import Http404
 from django.utils import timezone
@@ -35,9 +37,26 @@ def index(request):
         now = timezone.now()
         tasks = tasks.filter(due_at__isnull=False, due_at__lt=now, completed=False)
 
+    now = timezone.now()
+    three_days_later = now + timedelta(days=3)
+    urgent_window = Task.objects.filter(
+        completed=False,
+        due_at__isnull=False,
+        due_at__gte=now,
+        due_at__lte=three_days_later,
+    )
+    top_task = urgent_window.order_by('-priority', 'due_at').first()
+    if top_task is None:
+        top_task = Task.objects.filter(
+            completed=False,
+            due_at__isnull=False,
+            due_at__gte=now,
+        ).order_by('due_at').first()
+
     context = {
         'tasks': tasks,
-        'current_status': status or 'all'
+        'current_status': status or 'all',
+        'top_task': top_task,
     }
     return render(request, 'todo/index.html', context)
 
